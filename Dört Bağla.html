@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Strateji Oyunu - Dört Bağla</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .game-container {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        max-width: 600px;
+        width: 100%;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 2.5rem;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1.1rem;
+      }
+
+      .game-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 15px;
+      }
+
+      .current-player {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .player-indicator {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 10px;
+        border: 3px solid #333;
+      }
+
+      .red {
+        background-color: #e74c3c;
+      }
+      .yellow {
+        background-color: #f1c40f;
+      }
+
+      .score {
+        font-size: 1.1rem;
+        color: #666;
+      }
+
+      .game-board {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        background: #2c3e50;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .cell {
+        width: 60px;
+        height: 60px;
+        background: #34495e;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        border: 3px solid transparent;
+      }
+
+      .cell:hover {
+        background: #4a6741;
+        transform: scale(1.05);
+      }
+
+      .cell.filled {
+        cursor: not-allowed;
+      }
+
+      .cell.filled:hover {
+        transform: none;
+      }
+
+      .cell.red {
+        background: #e74c3c;
+        border-color: #c0392b;
+      }
+
+      .cell.yellow {
+        background: #f1c40f;
+        border-color: #f39c12;
+      }
+
+      .cell.winning {
+        animation: pulse 1s infinite;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      button {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .reset-btn {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+      }
+
+      .winner-message {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        display: none;
+      }
+
+      .rules {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 15px;
+        margin-top: 30px;
+        text-align: left;
+      }
+
+      .rules h3 {
+        color: #333;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .rules ul {
+        color: #666;
+        line-height: 1.6;
+        padding-left: 20px;
+      }
+
+      .rules li {
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 600px) {
+        .game-container {
+          padding: 20px;
+        }
+
+        .cell {
+          width: 45px;
+          height: 45px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .game-info {
+          flex-direction: column;
+          gap: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container">
+      <h1>🎯 Dört Bağla</h1>
+      <p class="subtitle">
+        Strateji ve zeka oyunu - İlk dört taşını bağlayan kazanır!
+      </p>
+
+      <div class="game-info">
+        <div class="current-player">
+          Sıra: <span id="currentPlayerText">Oyuncu 1</span>
+          <span id="playerIndicator" class="player-indicator red"></span>
+        </div>
+        <div class="score">
+          <div>🔴 Oyuncu 1: <span id="player1Score">0</span></div>
+          <div>🟡 Oyuncu 2: <span id="player2Score">0</span></div>
+        </div>
+      </div>
+
+      <div id="winnerMessage" class="winner-message"></div>
+
+      <div id="gameBoard" class="game-board"></div>
+
+      <div class="controls">
+        <button onclick="resetGame()">🔄 Yeni Oyun</button>
+        <button onclick="resetScores()" class="reset-btn">
+          📊 Skorları Sıfırla
+        </button>
+      </div>
+
+      <div class="rules">
+        <h3>📋 Oyun Kuralları</h3>
+        <ul>
+          <li>
+            <strong>Amaç:</strong> Kendi renginizdeki 4 taşı yatay, dikey veya
+            çapraz olarak bağlayın
+          </li>
+          <li>
+            <strong>Oynayış:</strong> Sütunlara tıklayarak taşınızı bırakın
+            (taşlar aşağı düşer)
+          </li>
+          <li>
+            <strong>Strateji:</strong> Hem kendi kombinasyonunuzu kurun, hem
+            rakibinizi engelleyin
+          </li>
+          <li>
+            <strong>Kazanma:</strong> İlk 4'lü bağlantıyı yapan oyuncu o turu
+            kazanır
+          </li>
+          <li>
+            <strong>Beraberlik:</strong> Tahta dolarsa ve kimse kazanamazsa
+            berabere biter
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      class ConnectFourGame {
+        constructor() {
+          this.rows = 6;
+          this.cols = 7;
+          this.board = [];
+          this.currentPlayer = 1; // 1 for red, 2 for yellow
+          this.gameOver = false;
+          this.scores = { player1: 0, player2: 0 };
+          this.initializeBoard();
+          this.createBoardHTML();
+          this.loadScores();
+        }
+
+        initializeBoard() {
+          this.board = [];
+          for (let i = 0; i < this.rows; i++) {
+            this.board[i] = new Array(this.cols).fill(0);
+          }
+          this.gameOver = false;
+        }
+
+        createBoardHTML() {
+          const gameBoard = document.getElementById("gameBoard");
+          gameBoard.innerHTML = "";
+
+          for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
+              const cell = document.createElement("div");
+              cell.className = "cell";
+              cell.dataset.row = row;
+              cell.dataset.col = col;
+              cell.addEventListener("click", () => this.makeMove(col));
+              gameBoard.appendChild(cell);
+            }
+          }
+        }
+
+        makeMove(col) {
+          if (this.gameOver) return;
+
+          // Find the lowest empty row in this column
+          let row = -1;
+          for (let r = this.rows - 1; r >= 0; r--) {
+            if (this.board[r][col] === 0) {
+              row = r;
+              break;
+            }
+          }
+
+          if (row === -1) return; // Column is full
+
+          // Place the piece
+          this.board[row][col] = this.currentPlayer;
+          this.updateCellDisplay(row, col);
+
+          // Check for win
+          if (this.checkWin(row, col)) {
+            this.handleWin();
+            return;
+          }
+
+          // Check for tie
+          if (this.isBoardFull()) {
+            this.handleTie();
+            return;
+          }
+
+          // Switch players
+          this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+          this.updatePlayerDisplay();
+        }
+
+        updateCellDisplay(row, col) {
+          const cell = document.querySelector(
+            `[data-row="${row}"][data-col="${col}"]`
+          );
+          cell.classList.add("filled");
+          cell.classList.add(this.currentPlayer === 1 ? "red" : "yellow");
+        }
+
+        checkWin(row, col) {
+          const directions = [
+            [0, 1], // horizontal
+            [1, 0], // vertical
+            [1, 1], // diagonal /
+            [1, -1], // diagonal \
+          ];
+
+          for (let [dr, dc] of directions) {
+            let count = 1; // Count the current piece
+            let winningCells = [[row, col]];
+
+            // Check in positive direction
+            let r = row + dr,
+              c = col + dc;
+            while (
+              r >= 0 &&
+              r < this.rows &&
+              c >= 0 &&
+              c < this.cols &&
+              this.board[r][c] === this.currentPlayer
+            ) {
+              count++;
+              winningCells.push([r, c]);
+              r += dr;
+              c += dc;
+            }
+
+            // Check in negative direction
+            r = row - dr;
+            c = col - dc;
+            while (
+              r >= 0 &&
+              r < this.rows &&
+              c >= 0 &&
+              c < this.cols &&
+              this.board[r][c] === this.currentPlayer
+            ) {
+              count++;
+              winningCells.push([r, c]);
+              r -= dr;
+              c -= dc;
+            }
+
+            if (count >= 4) {
+              this.highlightWinningCells(winningCells);
+              return true;
+            }
+          }
+          return false;
+        }
+
+        highlightWinningCells(cells) {
+          cells.forEach(([row, col]) => {
+            const cell = document.querySelector(
+              `[data-row="${row}"][data-col="${col}"]`
+            );
+            cell.classList.add("winning");
+          });
+        }
+
+        isBoardFull() {
+          return this.board[0].every((cell) => cell !== 0);
+        }
+
+        handleWin() {
+          this.gameOver = true;
+          const winner = this.currentPlayer === 1 ? "Oyuncu 1" : "Oyuncu 2";
+          const winnerMessage = document.getElementById("winnerMessage");
+          winnerMessage.textContent = `🎉 ${winner} Kazandı! 🎉`;
+          winnerMessage.style.display = "block";
+
+          // Update scores
+          if (this.currentPlayer === 1) {
+            this.scores.player1++;
+          } else {
+            this.scores.player2++;
+          }
+          this.updateScoreDisplay();
+          this.saveScores();
+        }
+
+        handleTie() {
+          this.gameOver = true;
+          const winnerMessage = document.getElementById("winnerMessage");
+          winnerMessage.textContent = "🤝 Berabere! Tahta doldu.";
+          winnerMessage.style.display = "block";
+        }
+
+        updatePlayerDisplay() {
+          const currentPlayerText =
+            document.getElementById("currentPlayerText");
+          const playerIndicator = document.getElementById("playerIndicator");
+
+          if (this.currentPlayer === 1) {
+            currentPlayerText.textContent = "Oyuncu 1";
+            playerIndicator.className = "player-indicator red";
+          } else {
+            currentPlayerText.textContent = "Oyuncu 2";
+            playerIndicator.className = "player-indicator yellow";
+          }
+        }
+
+        updateScoreDisplay() {
+          document.getElementById("player1Score").textContent =
+            this.scores.player1;
+          document.getElementById("player2Score").textContent =
+            this.scores.player2;
+        }
+
+        saveScores() {
+          localStorage.setItem(
+            "connectFourScores",
+            JSON.stringify(this.scores)
+          );
+        }
+
+        loadScores() {
+          const saved = localStorage.getItem("connectFourScores");
+          if (saved) {
+            this.scores = JSON.parse(saved);
+            this.updateScoreDisplay();
+          }
+        }
+
+        resetGame() {
+          this.initializeBoard();
+          this.currentPlayer = 1;
+          this.createBoardHTML();
+          this.updatePlayerDisplay();
+          document.getElementById("winnerMessage").style.display = "none";
+        }
+
+        resetScores() {
+          this.scores = { player1: 0, player2: 0 };
+          this.updateScoreDisplay();
+          this.saveScores();
+        }
+      }
+
+      // Initialize the game
+      let game = new ConnectFourGame();
+
+      // Global functions for buttons
+      function resetGame() {
+        game.resetGame();
+      }
+
+      function resetScores() {
+        game.resetScores();
+      }
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'95c1743ca0cb49c7',t:'MTc1MTk5NzM0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
